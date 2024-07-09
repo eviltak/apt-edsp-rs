@@ -148,9 +148,9 @@ pub enum RelationshipParseError {
 impl Display for RelationshipParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RelationshipParseError::EmptyPackageName(e) => write!(f, "Error parsing package name: {}", e),
-            RelationshipParseError::BadConstraintSpec(e) => write!(f, "Error parsing constraint spec: {}", e),
-            RelationshipParseError::BadVersion(e) => write!(f, "Error parsing version: {}", e)
+            RelationshipParseError::EmptyPackageName(e) => write!(f, "Error parsing package name:\n{}", e),
+            RelationshipParseError::BadConstraintSpec(e) => write!(f, "Error parsing constraint spec:\n{}", e),
+            RelationshipParseError::BadVersion(e) => write!(f, "Error parsing version:\n{}", e)
         }
     }
 }
@@ -163,28 +163,33 @@ impl FromStr for Relationship {
         use nom::bytes::complete::*;
         use nom::character::complete::*;
         use nom::combinator::*;
+        use nom::error::{convert_error, context};
         use nom::sequence::*;
 
         let (remaining, package) = terminated(
-            take_while1(|c: char| !c.is_whitespace() && c != '('),
+            context("package name", take_while1(|c: char| !c.is_whitespace() && c != '(')),
             space0,
         )(input)
             .finish()
-            .map_err(|e| RelationshipParseError::EmptyPackageName(nom::error::convert_error(input, e)))?;
+            .map_err(|e| RelationshipParseError::EmptyPackageName(convert_error(input, e)))?;
 
         // Parse constraint
         let constraint = if remaining.is_empty() {
             None
         } else {
-            let (_, (relation, version)) = all_consuming(preceded(
+            let (_, (relation, version)) = all_consuming(context("spec", preceded(
                 char('('),
                 terminated(
-                    separated_pair(Relation::parse, space0, take_until1(")")),
+                    separated_pair(
+                        context("relation", Relation::parse),
+                        space0,
+                        context("version", take_until1(")")),
+                    ),
                     tuple((char(')'), space0)),
                 ),
-            ))(remaining)
+            )))(remaining)
                 .finish()
-                .map_err(|e| RelationshipParseError::BadConstraintSpec(nom::error::convert_error(input, e)))?;
+                .map_err(|e| RelationshipParseError::BadConstraintSpec(convert_error(input, e)))?;
             let version = Version::try_from(version).map_err(RelationshipParseError::BadVersion)?;
             Some((relation, version))
         };
@@ -209,9 +214,77 @@ impl<'de> Deserialize<'de> for Relationship {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct Dependency {
+    pub first: Relationship,
+    pub alternates: Vec<Relationship>,
+}
+
+impl Display for Dependency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.first)?;
+
+        for alt in &self.alternates {
+            write!(f, " | {}", alt)?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum DependencyParseError {
+    Alternate(usize, RelationshipParseError),
+}
+
+impl Display for DependencyParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DependencyParseError::Alternate(i, e) => write!(f, "Error parsing alternate {i}: {e}"),
+        }
+    }
+}
+
+impl FromStr for Dependency {
+    type Err = DependencyParseError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let (first, rest) = input.split_once('|').unwrap_or((input, ""));
+
+        let first = first.trim().parse().map_err(|e| DependencyParseError::Alternate(0, e))?;
+        let alternates = if !rest.is_empty() {
+            rest.split('|')
+                .map(|s| s.trim())
+                .enumerate()
+                .map(|(i, s)| s.parse().map_err(|e| DependencyParseError::Alternate(i + 1, e)))
+                .collect::<Result<_, _>>()?
+        } else {
+            vec![]
+        };
+
+        Ok(Self {
+            first,
+            alternates,
+        })
+    }
+}
+
+impl Serialize for Dependency {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl<'de> Deserialize<'de> for Dependency {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        String::deserialize(deserializer)
+            .and_then(|v| v.parse().map_err(serde::de::Error::custom))
+    }
+}
 
 #[cfg(test)]
 mod tests {
+    use std::fmt::Debug;
     use indoc::indoc;
 
     use super::*;
@@ -233,36 +306,36 @@ mod tests {
         }
     }
 
-    fn struct_to_string<T: Serialize>(val: &T) -> String {
+    fn struct_to_string<T: Serialize + Debug>(val: &T) -> String {
         match rfc822_like::to_string(val) {
             Ok(t) => t,
-            Err(e) => panic!("Error when serializing: {e}"),
+            Err(e) => panic!("Error when serializing {val:?}: {e}"),
         }
     }
 
     fn struct_from_str<'de, T: Deserialize<'de>>(s: &'de str) -> T {
         match rfc822_like::from_str(s) {
             Ok(t) => t,
-            Err(e) => panic!("Error when deserializing: {e}"),
+            Err(e) => panic!("Error when deserializing \"{s}\": {e}"),
         }
     }
 
-    fn value_to_string<T: Serialize>(val: &T) -> String {
-        #[derive(Serialize)]
+    fn value_to_string<T: Serialize + Debug>(val: &T) -> String {
+        #[derive(Serialize, Debug)]
         struct Record<'a, V> {
-            val: &'a V,
+            xxx: &'a V,
         }
 
-        struct_to_string(&Record { val }).trim()["val: ".len()..].to_string()
+        struct_to_string(&Record { xxx: val }).trim()["xxx: ".len()..].to_string()
     }
 
     fn value_from_str<T: for<'de> Deserialize<'de>>(s: &str) -> T {
         #[derive(Deserialize)]
         struct Record<V> {
-            val: V,
+            xxx: V,
         }
 
-        struct_from_str::<Record<T>>(&format!("val: {s}")).val
+        struct_from_str::<Record<T>>(&format!("xxx: {s}")).xxx
     }
 
     macro_rules! serde_test {
@@ -408,6 +481,79 @@ mod tests {
                     package: "baz".into(),
                     constraint: None,
                 }
+            ]
+        }
+    }
+
+    serde_test! {
+        dependency(value_to_string, value_from_str): {
+            "foo" =>
+            Dependency {
+                first: Relationship {
+                    package: "foo".into(),
+                    constraint: None,
+                },
+                alternates: vec![],
+            },
+            "foo (= v1.0.0) | bar | baz (>> 0.1~1)" =>
+            Dependency {
+                first: Relationship {
+                    package: "foo".into(),
+                    constraint: Some((Relation::Equal, Version::try_from("v1.0.0").unwrap())),
+                },
+                alternates: vec![
+                    Relationship {
+                        package: "bar".into(),
+                        constraint: None,
+                    },
+                    Relationship {
+                        package: "baz".into(),
+                        constraint: Some((Relation::Later, Version::try_from("0.1~1").unwrap())),
+                    },
+                ],
+            }
+        }
+    }
+
+    serde_test! {
+        vec_dependencies(value_to_string, value_from_str): {
+            indoc! {"
+                foo (= v1.0.0) | bar,
+                     baz,
+                     qux | quux (>> 0.1~1)
+            "}.trim() =>
+            vec![
+                Dependency {
+                    first: Relationship {
+                        package: "foo".into(),
+                        constraint: Some((Relation::Equal, Version::try_from("v1.0.0").unwrap())),
+                    },
+                    alternates: vec![
+                        Relationship {
+                            package: "bar".into(),
+                            constraint: None,
+                        },
+                    ],
+                },
+                Dependency {
+                    first: Relationship {
+                        package: "baz".into(),
+                        constraint: None,
+                    },
+                    alternates: vec![],
+                },
+                Dependency {
+                    first: Relationship {
+                        package: "qux".into(),
+                        constraint: None,
+                    },
+                    alternates: vec![
+                        Relationship {
+                            package: "quux".into(),
+                            constraint: Some((Relation::Later, Version::try_from("0.1~1").unwrap())),
+                        },
+                    ],
+                },
             ]
         }
     }
