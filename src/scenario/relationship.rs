@@ -16,7 +16,9 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn parse<'a, E: nom::error::ParseError<&'a str>>(input: &'a str) -> nom::IResult<&str, Self, E> {
+    pub fn parse<'a, E: nom::error::ParseError<&'a str>>(
+        input: &'a str,
+    ) -> nom::IResult<&str, Self, E> {
         use nom::branch::alt;
         use nom::bytes::complete::tag;
         use nom::combinator::value;
@@ -70,8 +72,12 @@ pub enum RelationshipParseError {
 impl Display for RelationshipParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RelationshipParseError::EmptyPackageName(e) => write!(f, "Error parsing package name:\n{e}"),
-            RelationshipParseError::BadConstraintSpec(e) => write!(f, "Error parsing constraint spec:\n{e}"),
+            RelationshipParseError::EmptyPackageName(e) => {
+                write!(f, "Error parsing package name:\n{e}")
+            }
+            RelationshipParseError::BadConstraintSpec(e) => {
+                write!(f, "Error parsing constraint spec:\n{e}")
+            }
             RelationshipParseError::BadVersion(e) => write!(f, "Error parsing version:\n{e}"),
         }
     }
@@ -81,37 +87,43 @@ impl FromStr for Relationship {
     type Err = RelationshipParseError;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        use nom::Finish;
         use nom::bytes::complete::*;
         use nom::character::complete::*;
         use nom::combinator::*;
         use nom::error::{context, convert_error};
         use nom::sequence::*;
+        use nom::Finish;
 
         let (remaining, package) = terminated(
-            context("package name", take_while1(|c: char| !c.is_whitespace() && c != '(')),
+            context(
+                "package name",
+                take_while1(|c: char| !c.is_whitespace() && c != '('),
+            ),
             space0,
         )(input)
-            .finish()
-            .map_err(|e| RelationshipParseError::EmptyPackageName(convert_error(input, e)))?;
+        .finish()
+        .map_err(|e| RelationshipParseError::EmptyPackageName(convert_error(input, e)))?;
 
         // Parse constraint
         let constraint = if remaining.is_empty() {
             None
         } else {
-            let (_, (relation, version)) = all_consuming(context("spec", preceded(
-                char('('),
-                terminated(
-                    separated_pair(
-                        context("relation", Relation::parse),
-                        space0,
-                        context("version", take_until1(")")),
+            let (_, (relation, version)) = all_consuming(context(
+                "spec",
+                preceded(
+                    char('('),
+                    terminated(
+                        separated_pair(
+                            context("relation", Relation::parse),
+                            space0,
+                            context("version", take_until1(")")),
+                        ),
+                        tuple((char(')'), space0)),
                     ),
-                    tuple((char(')'), space0)),
                 ),
-            )))(remaining)
-                .finish()
-                .map_err(|e| RelationshipParseError::BadConstraintSpec(convert_error(input, e)))?;
+            ))(remaining)
+            .finish()
+            .map_err(|e| RelationshipParseError::BadConstraintSpec(convert_error(input, e)))?;
             let version = Version::try_from(version).map_err(RelationshipParseError::BadVersion)?;
             Some((relation, version))
         };
@@ -188,21 +200,24 @@ impl FromStr for Dependency {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let (first, rest) = input.split_once('|').unwrap_or((input, ""));
 
-        let first = first.trim().parse().map_err(|e| DependencyParseError::Alternate(0, e))?;
+        let first = first
+            .trim()
+            .parse()
+            .map_err(|e| DependencyParseError::Alternate(0, e))?;
         let alternates = if !rest.is_empty() {
             rest.split('|')
                 .map(|s| s.trim())
                 .enumerate()
-                .map(|(i, s)| s.parse().map_err(|e| DependencyParseError::Alternate(i + 1, e)))
+                .map(|(i, s)| {
+                    s.parse()
+                        .map_err(|e| DependencyParseError::Alternate(i + 1, e))
+                })
                 .collect::<Result<_, _>>()?
         } else {
             vec![]
         };
 
-        Ok(Self {
-            first,
-            alternates,
-        })
+        Ok(Self { first, alternates })
     }
 }
 

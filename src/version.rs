@@ -49,27 +49,32 @@ impl Eq for Version {}
 
 impl PartialEq<Self> for Version {
     fn eq(&self, other: &Self) -> bool {
-        self.epoch == other.epoch &&
-            self.version() == other.version() &&
-            self.revision() == other.revision()
+        self.epoch == other.epoch
+            && self.version() == other.version()
+            && self.revision() == other.revision()
     }
 }
 
 fn cmp_non_digit(a: &mut &[u8], b: &mut &[u8]) -> Ordering {
     while !a.is_empty() || !b.is_empty() {
-        match (a.first().filter(|c| !c.is_ascii_digit()), b.first().filter(|c| !c.is_ascii_digit())) {
+        match (
+            a.first().filter(|c| !c.is_ascii_digit()),
+            b.first().filter(|c| !c.is_ascii_digit()),
+        ) {
             (None, None) => return Ordering::Equal,
             (Some(c_a), Some(c_b)) if c_a == c_b => {}
             (Some(b'~'), _) => return Ordering::Less,
             (_, Some(b'~')) => return Ordering::Greater,
             (Some(_), None) => return Ordering::Greater,
             (None, Some(_)) => return Ordering::Less,
-            (Some(c_a), Some(c_b)) => if c_a != c_b {
-                return match (c_a.is_ascii_alphabetic(), c_b.is_ascii_alphabetic()) {
-                    (true, true) | (false, false) => c_a.cmp(c_b),
-                    (true, false) => Ordering::Less,
-                    (false, true) => Ordering::Greater,
-                };
+            (Some(c_a), Some(c_b)) => {
+                if c_a != c_b {
+                    return match (c_a.is_ascii_alphabetic(), c_b.is_ascii_alphabetic()) {
+                        (true, true) | (false, false) => c_a.cmp(c_b),
+                        (true, false) => Ordering::Less,
+                        (false, true) => Ordering::Greater,
+                    };
+                }
             }
         }
         *a = &a[1..];
@@ -80,15 +85,14 @@ fn cmp_non_digit(a: &mut &[u8], b: &mut &[u8]) -> Ordering {
 }
 
 fn get_next_num(s: &mut &[u8]) -> u128 {
-    std::iter::from_fn(|| {
-        match s.first() {
-            Some(&c) if c.is_ascii_digit() => {
-                *s = &s[1..];
-                Some(c - b'0')
-            }
-            _ => None,
+    std::iter::from_fn(|| match s.first() {
+        Some(&c) if c.is_ascii_digit() => {
+            *s = &s[1..];
+            Some(c - b'0')
         }
-    }).fold(0, |num, digit| 10 * num + (digit as u128))
+        _ => None,
+    })
+    .fold(0, |num, digit| 10 * num + (digit as u128))
 }
 
 fn cmp_num(a: &mut &[u8], b: &mut &[u8]) -> Ordering {
@@ -147,12 +151,14 @@ impl TryFrom<String> for Version {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let (epoch, epoch_len, remainder) = match value.split_once(':') {
             None => (0, 0, &*value),
-            Some((epoch_str, remainder)) => (epoch_str.parse()?, epoch_str.len() + 1, remainder)
+            Some((epoch_str, remainder)) => (epoch_str.parse()?, epoch_str.len() + 1, remainder),
         };
 
         let (revision, remainder) = match remainder.rsplit_once('-') {
             None => (0..0, remainder),
-            Some((remainder, revision_str)) => ((value.len() - revision_str.len())..value.len(), remainder)
+            Some((remainder, revision_str)) => {
+                ((value.len() - revision_str.len())..value.len(), remainder)
+            }
         };
 
         Ok(Version {
@@ -216,13 +222,22 @@ mod tests {
             assert_eq!("foo.123+bar~baz", no_epoch_and_revision.version());
             assert_eq!("", no_epoch_and_revision.revision());
 
-            assert_eq!(&IntErrorKind::InvalidDigit, Version::try_from("foo:bar").unwrap_err().kind())
+            assert_eq!(
+                &IntErrorKind::InvalidDigit,
+                Version::try_from("foo:bar").unwrap_err().kind()
+            )
         }
 
         #[test]
         fn cmp_string() {
-            assert_eq!(Less, cmp_non_digit(&mut "~".as_bytes(), &mut "+".as_bytes()));
-            assert_eq!(Greater, cmp_non_digit(&mut "~r".as_bytes(), &mut "~d".as_bytes()));
+            assert_eq!(
+                Less,
+                cmp_non_digit(&mut "~".as_bytes(), &mut "+".as_bytes())
+            );
+            assert_eq!(
+                Greater,
+                cmp_non_digit(&mut "~r".as_bytes(), &mut "~d".as_bytes())
+            );
         }
 
         #[test]
@@ -281,4 +296,3 @@ mod tests {
         }
     }
 }
-

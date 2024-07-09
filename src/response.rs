@@ -67,7 +67,10 @@ mod tests {
         let repr = indoc! {"
             Install: abc
         "};
-        let val = Response::Install(Install { install: "abc".into(), ..Default::default() });
+        let val = Response::Install(Install {
+            install: "abc".into(),
+            ..Default::default()
+        });
         assert_eq!(repr, rfc822_like::to_string(&val).unwrap());
     }
 }

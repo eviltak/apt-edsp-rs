@@ -9,15 +9,24 @@ struct TestCase<T> {
     val: T,
 }
 
-impl<T: Eq + Serialize + Deserialize<'static> + std::fmt::Debug> TestCase<T>
-{
+impl<T: Eq + Serialize + Deserialize<'static> + std::fmt::Debug> TestCase<T> {
     fn check<FS, FD>(&self, serialize_fn: FS, deserialize_fn: FD)
     where
         FS: Fn(&T) -> String,
         FD: Fn(&'static str) -> T,
     {
-        assert_eq!(self.val, (deserialize_fn)(self.repr), "Incorrect deserialized value from '{}' (left: expected, right: actual)", self.repr);
-        assert_eq!(self.repr, (serialize_fn)(&self.val), "Incorrect serialized value from '{:?}' (left: expected, right: actual)", self.val);
+        assert_eq!(
+            self.val,
+            (deserialize_fn)(self.repr),
+            "Incorrect deserialized value from '{}' (left: expected, right: actual)",
+            self.repr
+        );
+        assert_eq!(
+            self.repr,
+            (serialize_fn)(&self.val),
+            "Incorrect serialized value from '{:?}' (left: expected, right: actual)",
+            self.val
+        );
     }
 }
 
