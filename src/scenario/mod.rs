@@ -79,6 +79,7 @@ pub struct Package {
     pub package: String,
     pub version: Version,
     pub architecture: String,
+    pub installed: Option<String>,
     #[serde(rename = "APT-ID")]
     pub id: String,
     #[serde(rename = "APT-Pin")]
@@ -86,6 +87,7 @@ pub struct Package {
     #[serde(rename = "APT-Candidate")]
     pub candidate: Option<String>,
     pub depends: Vec<Dependency>,
+    pub conflicts: Vec<Relationship>,
 
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
