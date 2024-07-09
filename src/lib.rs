@@ -4,4 +4,5 @@ pub mod scenario;
 pub mod response;
 
 mod version;
+mod util;
 
