@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter};
 use serde::de::{Error, Visitor};
+use std::fmt::{Display, Formatter};
 
 pub struct TryFromStringVisitor<T>(std::marker::PhantomData<T>);
 
@@ -11,7 +11,7 @@ impl<T> TryFromStringVisitor<T> {
 
 impl<'de, T> Visitor<'de> for TryFromStringVisitor<T>
 where
-    T: TryFrom<String, Error: Display> + for<'a> TryFrom<&'a str, Error: Display>
+    T: TryFrom<String, Error: Display> + for<'a> TryFrom<&'a str, Error: Display>,
 {
     type Value = T;
 
