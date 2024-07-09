@@ -3,6 +3,10 @@ use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use std::ops::Range;
 
+use serde::{Deserialize, Serialize};
+
+use super::util::TryFromStringVisitor;
+
 #[derive(Clone, Debug, Default, Hash)]
 pub struct Version {
     epoch: usize,
@@ -165,6 +169,18 @@ impl TryFrom<&str> for Version {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         value.to_string().try_into()
+    }
+}
+
+impl Serialize for Version {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl<'de> Deserialize<'de> for Version {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_str(TryFromStringVisitor::new())
     }
 }
 
