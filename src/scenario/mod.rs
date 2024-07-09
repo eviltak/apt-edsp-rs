@@ -77,7 +77,7 @@ pub struct Request {
 #[serde(rename_all = "PascalCase")]
 pub struct Package {
     pub package: String,
-    pub version: String,
+    pub version: Version,
     pub architecture: String,
     #[serde(rename = "APT-ID")]
     pub id: String,
@@ -85,7 +85,7 @@ pub struct Package {
     pub pin: String,
     #[serde(rename = "APT-Candidate")]
     pub candidate: Option<String>,
-    pub depends: Option<String>,
+    pub depends: Vec<Dependency>,
 
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
