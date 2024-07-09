@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
+use super::super::util::TryFromStringVisitor;
 use super::Version;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -122,6 +123,22 @@ impl FromStr for Relationship {
     }
 }
 
+impl TryFrom<String> for Relationship {
+    type Error = <Self as FromStr>::Err;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_str(&value)
+    }
+}
+
+impl TryFrom<&str> for Relationship {
+    type Error = <Self as FromStr>::Err;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
 impl Serialize for Relationship {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(self)
@@ -130,8 +147,7 @@ impl Serialize for Relationship {
 
 impl<'de> Deserialize<'de> for Relationship {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        String::deserialize(deserializer)
-            .and_then(|v| v.parse().map_err(serde::de::Error::custom))
+        deserializer.deserialize_str(TryFromStringVisitor::new())
     }
 }
 
@@ -190,6 +206,22 @@ impl FromStr for Dependency {
     }
 }
 
+impl TryFrom<String> for Dependency {
+    type Error = <Self as FromStr>::Err;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::from_str(&value)
+    }
+}
+
+impl TryFrom<&str> for Dependency {
+    type Error = <Self as FromStr>::Err;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
 impl Serialize for Dependency {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(self)
@@ -198,7 +230,6 @@ impl Serialize for Dependency {
 
 impl<'de> Deserialize<'de> for Dependency {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        String::deserialize(deserializer)
-            .and_then(|v| v.parse().map_err(serde::de::Error::custom))
+        deserializer.deserialize_str(TryFromStringVisitor::new())
     }
 }
