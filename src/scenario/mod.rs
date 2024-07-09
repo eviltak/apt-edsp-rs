@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::io::BufRead;
-use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-pub use relationship::{Dependency, DependencyParseError, Relation, Relationship, RelationshipParseError};
+pub use relationship::{
+    Dependency, DependencyParseError, Relation, Relationship, RelationshipParseError,
+};
 
 use super::Version;
 
@@ -31,10 +31,7 @@ impl Scenario {
 
         log::debug!("Parsed universe with {} packages", universe.len());
 
-        Scenario {
-            request,
-            universe,
-        }
+        Scenario { request, universe }
     }
 }
 
