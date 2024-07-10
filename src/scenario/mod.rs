@@ -7,7 +7,7 @@ pub use relationship::{
     Dependency, DependencyParseError, Relation, Relationship, RelationshipParseError,
 };
 
-use super::Version;
+use super::{Bool, Version};
 
 mod relationship;
 
@@ -39,11 +39,11 @@ impl Scenario {
 #[serde(rename_all = "PascalCase")]
 pub struct Actions {
     #[serde(rename = "Dist-Upgrade")]
-    pub dist_upgrade: Option<String>,
-    pub upgrade: Option<String>,
-    pub autoremove: Option<String>,
+    pub dist_upgrade: Bool,
+    pub upgrade: Bool,
+    pub autoremove: Bool,
     #[serde(rename = "Upgrade-All")]
-    pub upgrade_all: Option<String>,
+    pub upgrade_all: Bool,
     pub remove: Option<String>,
     pub install: Option<String>,
 }
@@ -52,10 +52,13 @@ pub struct Actions {
 #[serde(rename_all = "PascalCase")]
 pub struct Preferences {
     #[serde(rename = "Strict-Pinning")]
-    pub strict_pinning: Option<String>,
+    pub strict_pinning: Bool<true>,
+    #[serde(rename = "Forbid-New-Install")]
+    pub forbid_new_install: Bool,
+    #[serde(rename = "Forbid-Remove")]
+    pub forbid_remove: Bool,
     pub solver: Option<String>,
-    #[serde(flatten)]
-    pub extra: HashMap<String, String>,
+    pub preferences: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
@@ -76,13 +79,16 @@ pub struct Package {
     pub package: String,
     pub version: Version,
     pub architecture: String,
-    pub installed: Option<String>,
+    pub installed: Bool,
+    pub hold: Bool,
     #[serde(rename = "APT-ID")]
     pub id: String,
     #[serde(rename = "APT-Pin")]
     pub pin: String,
     #[serde(rename = "APT-Candidate")]
-    pub candidate: Option<String>,
+    pub candidate: Bool,
+    #[serde(rename = "APT-Automatic")]
+    pub automatic: Bool,
     pub depends: Vec<Dependency>,
     pub conflicts: Vec<Relationship>,
 
