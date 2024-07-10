@@ -15,7 +15,7 @@ serde_test! {
             request: "EDSP 0.5".into(),
             architecture: "amd64".into(),
             actions: Actions {
-                upgrade_all: Some("yes".into()),
+                upgrade_all: Bool::YES,
                 ..Default::default()
             },
             ..Default::default()
@@ -32,14 +32,13 @@ serde_test! {
 
             Request: EDSP 0.5
             Architecture: amd64
-            Upgrade-All: no
         "} =>
         vec![
             Request {
                 request: "EDSP 0.5".into(),
                 architecture: "amd64".into(),
                 actions: Actions {
-                    upgrade_all: Some("yes".into()),
+                    upgrade_all: Bool::YES,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -48,7 +47,7 @@ serde_test! {
                 request: "EDSP 0.5".into(),
                 architecture: "amd64".into(),
                 actions: Actions {
-                    upgrade_all: Some("no".into()),
+                    upgrade_all: Bool::NO,
                     ..Default::default()
                 },
                 ..Default::default()
