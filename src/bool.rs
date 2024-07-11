@@ -6,15 +6,14 @@ use serde::{Deserialize, Serialize};
 use super::util::TryFromStringVisitor;
 
 /// A [`bool`] wrapper type that serializes `true` and `false` to `"yes"` and `"no"` respectively.
-/// [`Bool`] is generic over its default value [`D`].
+/// [`Bool`] is generic over its default value `D`.
 ///
-/// See [`Bool::serialize`] and [`Bool::deserialize`] for how the default value [`D`] is used to
+/// See [`Bool::serialize`] and [`Bool::deserialize`] for how the default value `D` is used to
 /// serialize and deserialize empty/`None` values.
 ///
 /// # Examples
 /// ```
 /// # use apt_edsp::Bool;
-///
 /// assert_eq!("yes", Bool::<false>::YES.as_str());
 /// assert_eq!(Bool::<false>::NO, "no".parse().unwrap());
 /// assert_eq!(Bool(true), Bool::<true>::default());
@@ -50,7 +49,7 @@ impl<const D: bool> Bool<D> {
 }
 
 impl<const D: bool> Default for Bool<D> {
-    /// Uses the const generic parameter [`D`] as the default value and returns `Bool(D)`.
+    /// Uses the const generic parameter `D` as the default value and returns `Bool(D)`.
     fn default() -> Self {
         Self(D)
     }
