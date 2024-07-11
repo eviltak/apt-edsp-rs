@@ -6,10 +6,12 @@ use serde::{Deserialize, Serialize};
 pub use relationship::{
     Dependency, DependencyParseError, Relation, Relationship, RelationshipParseError,
 };
+pub use version::Version;
 
-use super::{Bool, Version};
+use super::Bool;
 
 mod relationship;
+mod version;
 
 #[cfg(test)]
 mod tests;

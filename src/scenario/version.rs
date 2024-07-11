@@ -5,7 +5,7 @@ use std::ops::Range;
 
 use serde::{Deserialize, Serialize};
 
-use super::util::TryFromStringVisitor;
+use crate::util::TryFromStringVisitor;
 
 #[derive(Clone, Debug, Default)]
 pub struct Version {
