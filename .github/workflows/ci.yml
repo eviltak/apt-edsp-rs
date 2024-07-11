@@ -31,7 +31,7 @@ jobs:
       - name: Run clippy
         uses: auguwu/clippy-action@1.4.0
         with:
-          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   release:
     name: Release
@@ -41,11 +41,19 @@ jobs:
     env:
       is_merged_release_pr: ${{ github.event_name == 'pull_request' && github.event.pull_request.merged && startsWith(github.event.pull_request.head.ref, 'refs/heads/release-plz-') }}
     steps:
+      # Generating a GitHub token, so that PRs and tags created by
+      # the release-plz-action can trigger actions workflows.
+      - name: Generate GitHub token
+        uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - run: echo "Is merged release PR = $is_merged_release_pr"
@@ -55,5 +63,5 @@ jobs:
           # Run `release` if we just merged a release-plz PR, else run `release-pr`
           command: ${{ github.env.is_merged_release_pr && 'release' || 'release-pr' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
