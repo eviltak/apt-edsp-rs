@@ -34,6 +34,12 @@ jobs:
         uses: auguwu/clippy-action@1.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install cargo-rdme
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-rdme
+      - name: Check if README is up to date
+        run: cargo rdme --check
 
   release:
     name: Release
