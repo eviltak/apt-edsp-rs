@@ -11,6 +11,7 @@ commit_parsers = [
     { message = "^refactor", group = "Refactors" },
     { message = "^style", group = "Styling" },
     { message = "^test", group = "Testing" },
+    { message = "^chore\\(license\\)", group = "Licensing" },
     { message = "^ci|^chore", skip = true },
     { body = ".*security", group = "Security" },
     { message = "^revert", group = "Reverted" },
