@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use super::util::TryFromStringVisitor;
 
-#[derive(Clone, Debug, Default, Hash)]
+#[derive(Clone, Debug, Default)]
 pub struct Version {
     epoch: usize,
     version: Range<usize>,
@@ -52,6 +52,14 @@ impl PartialEq<Self> for Version {
         self.epoch == other.epoch
             && self.version() == other.version()
             && self.revision() == other.revision()
+    }
+}
+
+impl std::hash::Hash for Version {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.epoch.hash(state);
+        self.version().hash(state);
+        self.revision().hash(state);
     }
 }
 
