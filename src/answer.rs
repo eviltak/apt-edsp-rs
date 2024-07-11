@@ -36,24 +36,13 @@ pub struct Error {
     message: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
-#[serde(rename_all = "PascalCase")]
-pub struct Progress {
-    progress: String,
-    percentage: Option<String>,
-    message: Option<String>,
-}
-
-// Deserialize implemented manually below
 #[derive(Serialize, Debug, Eq, PartialEq)]
 #[serde(untagged)]
-pub enum Response {
+pub enum Answer {
     Install(Install),
     Remove(Remove),
     Autoremove(Autoremove),
     Error(Error),
-    Progress(Progress),
-    Empty,
 }
 
 #[cfg(test)]
@@ -67,7 +56,7 @@ mod tests {
         let repr = indoc! {"
             Install: abc
         "};
-        let val = Response::Install(Install {
+        let val = Answer::Install(Install {
             install: "abc".into(),
             ..Default::default()
         });
