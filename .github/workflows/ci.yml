@@ -6,6 +6,11 @@ permissions:
 
 on:
   push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,7 +38,7 @@ jobs:
   release:
     name: Release
     needs: build
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       # Generating a GitHub token, so that PRs and tags created by
