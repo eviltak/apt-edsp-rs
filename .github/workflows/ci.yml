@@ -6,6 +6,11 @@ permissions:
 
 on:
   push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 env:
   CARGO_TERM_COLOR: always
@@ -29,11 +34,17 @@ jobs:
         uses: auguwu/clippy-action@1.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install cargo-rdme
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-rdme
+      - name: Check if README is up to date
+        run: cargo rdme --check
 
   release:
     name: Release
     needs: build
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       # Generating a GitHub token, so that PRs and tags created by

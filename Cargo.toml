@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "BSD-3-Clause"
 description = "A Rust data model of the APT External Dependency Solver Protocol."
+readme = "README.md"
 
 [dependencies]
 rfc822-like = "0.2.2"
