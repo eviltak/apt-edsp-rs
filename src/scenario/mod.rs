@@ -23,16 +23,8 @@ pub struct Scenario {
 
 impl Scenario {
     pub fn from_read<R: BufRead>(mut reader: R) -> Self {
-        log::info!("Parsing scenario...");
-
         let request: Request = rfc822_like::from_reader(&mut reader).unwrap();
-
-        log::debug!("Parsed request: {:#?}", request);
-
         let universe: Vec<Package> = rfc822_like::from_reader(&mut reader).unwrap();
-
-        log::debug!("Parsed universe with {} packages", universe.len());
-
         Scenario { request, universe }
     }
 }
