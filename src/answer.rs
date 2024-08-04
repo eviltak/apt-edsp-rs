@@ -8,7 +8,7 @@ pub struct Install {
     pub install: String,
 
     #[serde(flatten)]
-    extra: HashMap<String, String>,
+    pub extra: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
@@ -17,23 +17,23 @@ pub struct Remove {
     pub remove: String,
 
     #[serde(flatten)]
-    extra: HashMap<String, String>,
+    pub extra: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Autoremove {
-    autoremove: String,
+    pub autoremove: String,
 
     #[serde(flatten)]
-    extra: HashMap<String, String>,
+    pub extra: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Error {
-    error: String,
-    message: String,
+    pub error: String,
+    pub message: String,
 }
 
 #[derive(Serialize, Debug, Eq, PartialEq)]
