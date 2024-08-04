@@ -55,6 +55,18 @@ impl<const D: bool> Default for Bool<D> {
     }
 }
 
+impl<const D: bool> From<bool> for Bool<D> {
+    fn from(value: bool) -> Self {
+        Self(value)
+    }
+}
+
+impl<const D: bool> From<Bool<D>> for bool {
+    fn from(value: Bool<D>) -> Self {
+        value.0
+    }
+}
+
 impl<const D: bool> From<Bool<D>> for &'static str {
     fn from(value: Bool<D>) -> Self {
         value.as_str()
@@ -158,6 +170,9 @@ mod tests {
     fn consts() {
         assert_eq!(BoolDefaultFalse::YES, Bool(true));
         assert_eq!(BoolDefaultFalse::NO, Bool(false));
+
+        assert_eq!(BoolDefaultFalse::YES, true.into());
+        assert_eq!(BoolDefaultFalse::NO, false.into());
 
         assert_eq!(BoolDefaultFalse::yes(), BoolDefaultFalse::YES);
         assert_eq!(BoolDefaultFalse::no(), BoolDefaultFalse::NO);
