@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.1.0...v0.2.0) - 2024-08-04
+
+### Bug Fixes
+- Remove unnecessary logs
+
+### Documentation
+- Document top-level items
+- *(Bool)* Remove unresolved links to const generic parameter
+
+### Features
+- [**breaking**] Make all fields of all `answer` structs public
+- *(Bool)* Implement `From` to convert to and from `bool`
+
+### Refactors
+- [**breaking**] Move version mod inside scenario mod
+- [**breaking**] Rename response mod to answer and extract progress mod
+
 ## [0.1.0](https://github.com/eviltak/apt-edsp-rs/releases/tag/v0.1.0) - 2024-07-11
 
 ### Bug Fixes
