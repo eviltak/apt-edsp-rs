@@ -38,10 +38,14 @@ pub struct Error {
 
 #[derive(Serialize, Debug, Eq, PartialEq)]
 #[serde(untagged)]
-pub enum Answer {
+pub enum Action {
     Install(Install),
     Remove(Remove),
     Autoremove(Autoremove),
+}
+
+pub enum Answer {
+    Solution(Vec<Action>),
     Error(Error),
 }
 
@@ -56,7 +60,7 @@ mod tests {
         let repr = indoc! {"
             Install: abc
         "};
-        let val = Answer::Install(Install {
+        let val = Action::Install(Install {
             install: "abc".into(),
             ..Default::default()
         });
