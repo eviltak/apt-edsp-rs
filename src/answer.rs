@@ -52,6 +52,8 @@ pub enum Action {
     Autoremove(Autoremove),
 }
 
+#[derive(Serialize, Debug, Eq, PartialEq)]
+#[serde(untagged)]
 pub enum Answer {
     Solution(Vec<Action>),
     Error(Error),
