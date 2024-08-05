@@ -52,6 +52,24 @@ pub enum Action {
     Autoremove(Autoremove),
 }
 
+impl From<Install> for Action {
+    fn from(value: Install) -> Self {
+        Self::Install(value)
+    }
+}
+
+impl From<Remove> for Action {
+    fn from(value: Remove) -> Self {
+        Self::Remove(value)
+    }
+}
+
+impl From<Autoremove> for Action {
+    fn from(value: Autoremove) -> Self {
+        Self::Autoremove(value)
+    }
+}
+
 #[derive(Serialize, Debug, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum Answer {
@@ -62,6 +80,12 @@ pub enum Answer {
 impl Answer {
     pub fn write_to(&self, writer: impl std::io::Write) -> Result<(), AnswerWriteError> {
         rfc822_like::to_writer(writer, self).map_err(Into::into)
+    }
+}
+
+impl From<Error> for Answer {
+    fn from(value: Error) -> Self {
+        Self::Error(value)
     }
 }
 
@@ -103,21 +127,21 @@ mod tests {
             "} =>
             Answer::Solution(
                 vec![
-                    Action::Install(Install {
+                    Install {
                         install: "123".into(),
                         architecture: Some("amd64".into()),
                         ..Default::default()
-                    }),
-                    Action::Remove(Remove {
+                    }.into(),
+                    Remove {
                         remove: "234".into(),
                         package: Some("bar".into()),
                         version: Some("0.1.2".try_into().unwrap()),
                         ..Default::default()
-                    }),
-                    Action::Autoremove(Autoremove {
+                    }.into(),
+                    Autoremove {
                         autoremove: "345".into(),
                         ..Default::default()
-                    }),
+                    }.into(),
                 ]
             ),
             indoc! {"
