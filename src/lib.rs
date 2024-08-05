@@ -7,6 +7,9 @@
 pub use bool::Bool;
 pub use progress::Progress;
 
+#[cfg(test)]
+mod test_util;
+
 /// Contains the models for [EDSP answers].
 ///
 /// [EDSP answers]: https://salsa.debian.org/apt-team/apt/-/blob/a8367745eac915281cc2b9fb98813e9225d1e55c/doc/external-dependency-solver-protocol.md#answer
@@ -20,6 +23,3 @@ pub mod scenario;
 mod bool;
 mod progress;
 mod util;
-
-#[cfg(test)]
-mod test_util;

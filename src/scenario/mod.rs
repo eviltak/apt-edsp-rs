@@ -22,12 +22,16 @@ pub struct Scenario {
 }
 
 impl Scenario {
-    pub fn from_read<R: BufRead>(mut reader: R) -> Self {
-        let request: Request = rfc822_like::from_reader(&mut reader).unwrap();
-        let universe: Vec<Package> = rfc822_like::from_reader(&mut reader).unwrap();
-        Scenario { request, universe }
+    pub fn read_from(mut reader: impl BufRead) -> Result<Self, ScenarioReadError> {
+        let request: Request = rfc822_like::from_reader(&mut reader)?;
+        let universe: Vec<Package> = rfc822_like::from_reader(&mut reader)?;
+        Ok(Scenario { request, universe })
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct ScenarioReadError(#[from] rfc822_like::de::Error);
 
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]

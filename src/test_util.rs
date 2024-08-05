@@ -13,23 +13,24 @@ impl<T> TestCase<T> {
     }
 }
 
-impl<T: Eq + Serialize + Deserialize<'static> + Debug> TestCase<T> {
-    pub fn check<FS, FD>(&self, serialize_fn: FS, deserialize_fn: FD)
-    where
-        FS: Fn(&T) -> String,
-        FD: Fn(&'static str) -> T,
-    {
-        assert_eq!(
-            self.val,
-            (deserialize_fn)(self.repr),
-            "Incorrect deserialized value from '{}' (left: expected, right: actual)",
-            self.repr
-        );
+impl<T: Eq + Serialize + Debug> TestCase<T> {
+    pub fn check_ser(&self, serialize_fn: impl Fn(&T) -> String) {
         assert_eq!(
             self.repr,
             (serialize_fn)(&self.val),
             "Incorrect serialized value from '{:?}' (left: expected, right: actual)",
             self.val
+        );
+    }
+}
+
+impl<T: Eq + Deserialize<'static> + Debug> TestCase<T> {
+    pub fn check_de(&self, deserialize_fn: impl Fn(&'static str) -> T) {
+        assert_eq!(
+            self.val,
+            (deserialize_fn)(self.repr),
+            "Incorrect deserialized value from '{}' (left: expected, right: actual)",
+            self.repr
         );
     }
 }
@@ -66,7 +67,6 @@ pub fn value_from_str<T: for<'de> Deserialize<'de>>(s: &str) -> T {
     struct_from_str::<Record<T>>(&format!("xxx: {s}")).xxx
 }
 
-#[macro_export]
 macro_rules! serde_test {
     ($name:ident: {$($repr:expr => $val:expr),+ $(,)?}) => {
         serde_test!(
@@ -92,11 +92,44 @@ macro_rules! serde_test {
             {
                 let repr = { $repr };
                 let val = { $val };
-                crate::test_util::TestCase::new(repr, val).check($serialize_fn, $deserialize_fn);
+                let test_case = crate::test_util::TestCase::new(repr, val);
+                test_case.check_ser($serialize_fn);
+                test_case.check_de($deserialize_fn);
             }
             )+
         }
     };
 }
 
-pub use serde_test;
+macro_rules! ser_test {
+    ($name:ident: {$($repr:expr => $val:expr),+ $(,)?}) => {
+        ser_test!(
+            $name(crate::test_util::struct_to_string): {$($repr => $val),+}
+        );
+    };
+
+    ($name:ident($serialize_fn:expr): {$($repr:expr => $val:expr),+ $(,)?}) => {
+        ser_test!(@test
+            $name,
+            $serialize_fn,
+            $($repr, $val)+;
+        );
+    };
+
+    (@test $name:ident, $serialize_fn:expr, $($repr:expr, $val:expr)+;) => {
+        #[test]
+        fn $name() {
+            $(
+            {
+                let repr = { $repr };
+                let val = { $val };
+                let test_case = crate::test_util::TestCase::new(repr, val);
+                test_case.check_ser($serialize_fn);
+            }
+            )+
+        }
+    };
+}
+
+pub(crate) use ser_test;
+pub(crate) use serde_test;
