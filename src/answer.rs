@@ -63,17 +63,62 @@ pub enum Answer {
 mod tests {
     use indoc::indoc;
 
+    use crate::test_util::ser_test;
+
     use super::*;
 
-    #[test]
-    fn test_answer() {
-        let repr = indoc! {"
-            Install: abc
-        "};
-        let val = Action::Install(Install {
-            install: "abc".into(),
-            ..Default::default()
-        });
-        assert_eq!(repr, rfc822_like::to_string(&val).unwrap());
+    ser_test! {
+        test_action: {
+            indoc! {"
+                Install: abc
+            "} =>
+            Action::Install(Install {
+                install: "abc".into(),
+                ..Default::default()
+            }),
+        }
+    }
+
+    ser_test! {
+        test_answer: {
+            indoc! {"
+                Install: 123
+                Architecture: amd64
+
+                Remove: 234
+                Package: bar
+                Version: 0.1.2
+
+                Autoremove: 345
+            "} =>
+            Answer::Solution(
+                vec![
+                    Action::Install(Install {
+                        install: "123".into(),
+                        architecture: Some("amd64".into()),
+                        ..Default::default()
+                    }),
+                    Action::Remove(Remove {
+                        remove: "234".into(),
+                        package: Some("bar".into()),
+                        version: Some("0.1.2".try_into().unwrap()),
+                        ..Default::default()
+                    }),
+                    Action::Autoremove(Autoremove {
+                        autoremove: "345".into(),
+                        ..Default::default()
+                    }),
+                ]
+            ),
+            indoc! {"
+                Error: foo
+                Message: bar
+                 baz
+            "} =>
+            Answer::Error(Error {
+                error: "foo".to_string(),
+                message: "bar\nbaz".to_string(),
+            }),
+        }
     }
 }
