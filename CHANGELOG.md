@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.2.0...v0.3.0) - 2024-08-05
+
+### Bug Fixes and Improvements
+- *(cargo)* Add `repository` metadata
+- *(cargo)* Exclude unnecessary files from crate package
+
+### Features
+- Add `Progress::write_to` method
+- Add `Answer::write_to` method
+- [**breaking**] Rename `Scenario::from_read` to `read_from` and return Error
+- Derive traits for `Answer` enum
+- *(answer)* Add recommended fields to `Install` and `Remove`
+- *(answer)* Accurately represent EDSP in `Answer` variants
+- *(Progress)* Make all fields of `Progress` public
+
+### Testing
+- Add tests for `Answer` enum
+- Add `ser_test!` helper macro
+
 ## [0.2.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.1.0...v0.2.0) - 2024-08-04
 
 ### Bug Fixes
