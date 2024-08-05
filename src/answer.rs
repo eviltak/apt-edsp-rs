@@ -59,6 +59,16 @@ pub enum Answer {
     Error(Error),
 }
 
+impl Answer {
+    pub fn write_to(&self, writer: impl std::io::Write) -> Result<(), AnswerWriteError> {
+        rfc822_like::to_writer(writer, self).map_err(Into::into)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct AnswerWriteError(#[from] rfc822_like::ser::Error);
+
 #[cfg(test)]
 mod tests {
     use indoc::indoc;
