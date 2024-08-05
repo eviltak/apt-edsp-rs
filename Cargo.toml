@@ -4,6 +4,7 @@ version = "0.2.0"
 edition = "2021"
 license = "BSD-3-Clause"
 description = "A Rust data model of the APT External Dependency Solver Protocol."
+repository = "https://github.com/eviltak/apt-edsp-rs"
 readme = "README.md"
 exclude = [".github", ".idea", ".release-plz.toml"]
 
