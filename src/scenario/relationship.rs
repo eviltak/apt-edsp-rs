@@ -16,7 +16,7 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn parse<'a, E: nom::error::ParseError<&'a str>>(
+    fn parse<'a, E: nom::error::ParseError<&'a str>>(
         input: &'a str,
     ) -> nom::IResult<&str, Self, E> {
         use nom::branch::alt;
