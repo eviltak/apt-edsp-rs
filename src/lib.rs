@@ -9,7 +9,7 @@
 #![deny(rustdoc::private_intra_doc_links)]
 
 pub use bool::Bool;
-pub use progress::Progress;
+pub use progress::{Progress, ProgressWriteError};
 
 #[cfg(test)]
 mod test_util;
