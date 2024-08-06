@@ -129,34 +129,34 @@ serde_test! {
 }
 
 serde_test! {
-    relationship(value_to_string, value_from_str): {
+    version_set(value_to_string, value_from_str): {
         "foo" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: None,
         },
         "foo (<< 2.2.1)" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: Some((Relation::Earlier, Version::try_from("2.2.1").unwrap())),
         },
         "foo (<= 2.2.1)" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: Some((Relation::EarlierEqual, Version::try_from("2.2.1").unwrap())),
         },
         "foo (= 2.2.1)" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: Some((Relation::Equal, Version::try_from("2.2.1").unwrap())),
         },
         "foo (>= 2.2.1)" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: Some((Relation::LaterEqual, Version::try_from("2.2.1").unwrap())),
         },
         "foo (>> 2.2.1)" =>
-        Relationship {
+        VersionSet {
             package: "foo".into(),
             constraint: Some((Relation::Later, Version::try_from("2.2.1").unwrap())),
         }
@@ -164,22 +164,22 @@ serde_test! {
 }
 
 serde_test! {
-    vec_relationship(value_to_string, value_from_str): {
+    vec_version_set(value_to_string, value_from_str): {
         indoc! {"
             foo,
                  bar,
                  baz
         "}.trim() =>
         vec![
-            Relationship {
+            VersionSet {
                 package: "foo".into(),
                 constraint: None,
             },
-            Relationship {
+            VersionSet {
                 package: "bar".into(),
                 constraint: None,
             },
-            Relationship {
+            VersionSet {
                 package: "baz".into(),
                 constraint: None,
             }
@@ -191,7 +191,7 @@ serde_test! {
     dependency(value_to_string, value_from_str): {
         "foo" =>
         Dependency {
-            first: Relationship {
+            first: VersionSet {
                 package: "foo".into(),
                 constraint: None,
             },
@@ -199,16 +199,16 @@ serde_test! {
         },
         "foo (= v1.0.0) | bar | baz (>> 0.1~1)" =>
         Dependency {
-            first: Relationship {
+            first: VersionSet {
                 package: "foo".into(),
                 constraint: Some((Relation::Equal, Version::try_from("v1.0.0").unwrap())),
             },
             alternates: vec![
-                Relationship {
+                VersionSet {
                     package: "bar".into(),
                     constraint: None,
                 },
-                Relationship {
+                VersionSet {
                     package: "baz".into(),
                     constraint: Some((Relation::Later, Version::try_from("0.1~1").unwrap())),
                 },
@@ -226,31 +226,31 @@ serde_test! {
         "}.trim() =>
         vec![
             Dependency {
-                first: Relationship {
+                first: VersionSet {
                     package: "foo".into(),
                     constraint: Some((Relation::Equal, Version::try_from("v1.0.0").unwrap())),
                 },
                 alternates: vec![
-                    Relationship {
+                    VersionSet {
                         package: "bar".into(),
                         constraint: None,
                     },
                 ],
             },
             Dependency {
-                first: Relationship {
+                first: VersionSet {
                     package: "baz".into(),
                     constraint: None,
                 },
                 alternates: vec![],
             },
             Dependency {
-                first: Relationship {
+                first: VersionSet {
                     package: "qux".into(),
                     constraint: None,
                 },
                 alternates: vec![
-                    Relationship {
+                    VersionSet {
                         package: "quux".into(),
                         constraint: Some((Relation::Later, Version::try_from("0.1~1").unwrap())),
                     },

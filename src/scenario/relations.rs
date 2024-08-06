@@ -45,12 +45,12 @@ impl Display for Relation {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct Relationship {
+pub struct VersionSet {
     pub package: String,
     pub constraint: Option<(Relation, Version)>,
 }
 
-impl Display for Relationship {
+impl Display for VersionSet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.package)?;
 
@@ -63,28 +63,28 @@ impl Display for Relationship {
 }
 
 #[derive(Debug)]
-pub enum RelationshipParseError {
+pub enum VersionSetParseError {
     EmptyPackageName(String),
     BadConstraintSpec(String),
     BadVersion(<Version as TryFrom<&'static str>>::Error),
 }
 
-impl Display for RelationshipParseError {
+impl Display for VersionSetParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RelationshipParseError::EmptyPackageName(e) => {
+            VersionSetParseError::EmptyPackageName(e) => {
                 write!(f, "Error parsing package name:\n{e}")
             }
-            RelationshipParseError::BadConstraintSpec(e) => {
+            VersionSetParseError::BadConstraintSpec(e) => {
                 write!(f, "Error parsing constraint spec:\n{e}")
             }
-            RelationshipParseError::BadVersion(e) => write!(f, "Error parsing version:\n{e}"),
+            VersionSetParseError::BadVersion(e) => write!(f, "Error parsing version:\n{e}"),
         }
     }
 }
 
-impl FromStr for Relationship {
-    type Err = RelationshipParseError;
+impl FromStr for VersionSet {
+    type Err = VersionSetParseError;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         use nom::bytes::complete::*;
@@ -102,7 +102,7 @@ impl FromStr for Relationship {
             space0,
         )(input)
         .finish()
-        .map_err(|e| RelationshipParseError::EmptyPackageName(convert_error(input, e)))?;
+        .map_err(|e| VersionSetParseError::EmptyPackageName(convert_error(input, e)))?;
 
         // Parse constraint
         let constraint = if remaining.is_empty() {
@@ -123,8 +123,8 @@ impl FromStr for Relationship {
                 ),
             ))(remaining)
             .finish()
-            .map_err(|e| RelationshipParseError::BadConstraintSpec(convert_error(input, e)))?;
-            let version = Version::try_from(version).map_err(RelationshipParseError::BadVersion)?;
+            .map_err(|e| VersionSetParseError::BadConstraintSpec(convert_error(input, e)))?;
+            let version = Version::try_from(version).map_err(VersionSetParseError::BadVersion)?;
             Some((relation, version))
         };
 
@@ -135,7 +135,7 @@ impl FromStr for Relationship {
     }
 }
 
-impl TryFrom<String> for Relationship {
+impl TryFrom<String> for VersionSet {
     type Error = <Self as FromStr>::Err;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
@@ -143,7 +143,7 @@ impl TryFrom<String> for Relationship {
     }
 }
 
-impl TryFrom<&str> for Relationship {
+impl TryFrom<&str> for VersionSet {
     type Error = <Self as FromStr>::Err;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -151,13 +151,13 @@ impl TryFrom<&str> for Relationship {
     }
 }
 
-impl Serialize for Relationship {
+impl Serialize for VersionSet {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(self)
     }
 }
 
-impl<'de> Deserialize<'de> for Relationship {
+impl<'de> Deserialize<'de> for VersionSet {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer.deserialize_str(TryFromStringVisitor::new())
     }
@@ -165,8 +165,8 @@ impl<'de> Deserialize<'de> for Relationship {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Dependency {
-    pub first: Relationship,
-    pub alternates: Vec<Relationship>,
+    pub first: VersionSet,
+    pub alternates: Vec<VersionSet>,
 }
 
 impl Display for Dependency {
@@ -183,7 +183,7 @@ impl Display for Dependency {
 
 #[derive(Debug)]
 pub enum DependencyParseError {
-    Alternate(usize, RelationshipParseError),
+    Alternate(usize, VersionSetParseError),
 }
 
 impl Display for DependencyParseError {

@@ -3,14 +3,12 @@ use std::io::BufRead;
 
 use serde::{Deserialize, Serialize};
 
-pub use relationship::{
-    Dependency, DependencyParseError, Relation, Relationship, RelationshipParseError,
-};
+pub use relations::{Dependency, DependencyParseError, Relation, VersionSet, VersionSetParseError};
 pub use version::Version;
 
 use super::Bool;
 
-mod relationship;
+mod relations;
 mod version;
 
 #[cfg(test)]
@@ -190,7 +188,7 @@ pub struct Package {
     ///
     /// [man]: https://www.debian.org/doc/debian-policy/ch-relationships.html#conflicting-binary-packages-conflicts
     #[serde(default)]
-    pub conflicts: Vec<Relationship>,
+    pub conflicts: Vec<VersionSet>,
 
     /// Contains other optional fields that can be contained in a [`Package`] stanza.
     #[serde(flatten)]
