@@ -4,6 +4,10 @@
 //! [apt-edsp]: https://salsa.debian.org/apt-team/apt/-/blob/a8367745eac915281cc2b9fb98813e9225d1e55c/doc/external-dependency-solver-protocol.md
 //! [APT]: https://en.wikipedia.org/wiki/APT_(software)
 
+#![deny(missing_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+
 pub use bool::Bool;
 pub use progress::Progress;
 
