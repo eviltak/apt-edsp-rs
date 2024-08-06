@@ -87,7 +87,9 @@ pub struct Package {
     pub candidate: Bool,
     #[serde(rename = "APT-Automatic")]
     pub automatic: Bool,
+    #[serde(default)]
     pub depends: Vec<Dependency>,
+    #[serde(default)]
     pub conflicts: Vec<Relationship>,
 
     #[serde(flatten)]
