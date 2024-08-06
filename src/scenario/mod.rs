@@ -81,8 +81,8 @@ pub struct Package {
     pub hold: Bool,
     #[serde(rename = "APT-ID")]
     pub id: String,
-    #[serde(rename = "APT-Pin")]
-    pub pin: String,
+    #[serde(rename = "APT-Pin", with = "super::util::serde_as_string")]
+    pub pin: u32,
     #[serde(rename = "APT-Candidate")]
     pub candidate: Bool,
     #[serde(rename = "APT-Automatic")]
