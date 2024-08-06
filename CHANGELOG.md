@@ -6,6 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.3.0...v0.4.0) - 2024-08-06
+
+### Bug Fixes and Improvements
+- *(scenario)* Add default value for `Package::depends` and `conflicts`
+
+### Documentation
+- Document all items in the `relations` module
+- Document all items in the `version` module
+- Document all items in `progress` module
+- Document items in `scenario` module
+- Document items in `answer` module
+
+### Features
+- Reexport `ProgressWriteError` in the crate root
+- *(scenario)* [**breaking**] Rename `Relationship` to `VersionSet`
+- *(scenario)* [**breaking**] Change `Package::pin` type to `u32`
+- *(answer)* Add `From` impls to convert structs to enums
+
+### Internal Changes
+- Add crate-level documentation-related lints
+
+### Removals
+- *(relationship)* [**breaking**] Make `Relation::parse` private
+
+### Testing
+- *(scenario)* Add serde tests for `Package`s
+
 ## [0.3.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.2.0...v0.3.0) - 2024-08-05
 
 ### Bug Fixes and Improvements
