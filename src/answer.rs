@@ -4,51 +4,121 @@ use serde::{Deserialize, Serialize};
 
 use super::scenario::Version;
 
+/// A stanza telling APT to install a specific new package, or to upgrade or downgrade a package
+/// to a specific version.
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Install {
+    /// The identifier of the package to install.
+    ///
+    /// Must reference the identifier of a package in the package universe
+    /// (see [`Package::id`](super::scenario::Package::id)).
     pub install: String,
+
+    /// The name of the package to install.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::package`](super::scenario::Package::package)) of the corresponding
+    /// package in the package universe.
     pub package: Option<String>,
+
+    /// The version of the package to install.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::version`](super::scenario::Package::version)) of the corresponding
+    /// package in the package universe.
     pub version: Option<Version>,
+
+    /// The architecture of the package to install.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::architecture`](super::scenario::Package::architecture)) of the corresponding
+    /// package in the package universe.
     pub architecture: Option<String>,
 
+    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
 
+/// A stanza telling APT to remove a specific package.
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Remove {
+    /// The identifier of the package to remove.
+    ///
+    /// Must reference the identifier of a package in the package universe
+    /// (see [`Package::id`](super::scenario::Package::id)).
     pub remove: String,
+
+    /// The name of the package to remove.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::package`](super::scenario::Package::package)) of the corresponding
+    /// package in the package universe.
     pub package: Option<String>,
+
+    /// The version of the package to remove.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::version`](super::scenario::Package::version)) of the corresponding
+    /// package in the package universe.
     pub version: Option<Version>,
+
+    /// The architecture of the package to remove.
+    ///
+    /// While optional, it is highly recommend to set this field to the value of the field
+    /// ([`Package::architecture`](super::scenario::Package::architecture)) of the corresponding
+    /// package in the package universe.
     pub architecture: Option<String>,
 
+    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
 
+/// A stanza telling APT that a specific package can be autoremoved as a consequence of the
+/// executed user request.
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Autoremove {
+    /// The identifier of the package that can be autoremoved.
+    ///
+    /// Must reference the identifier of a package in the package universe
+    /// (see [`Package::id`](super::scenario::Package::id)).
     pub autoremove: String,
 
+    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
 
+/// An [Error stanza][error] reporting the error(s) faced when trying to fulfill an
+/// unsatisfiable user request.
+///
+/// [error]: https://salsa.debian.org/apt-team/apt/-/blob/a8367745/doc/external-dependency-solver-protocol.md#error
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Error {
+    /// A unique error identifier, such as a UUID. The value of this field is ignored.
     pub error: String,
+
+    /// Human-readable text explaining the cause of the solver error.
+    ///
+    /// If multiline, the first line conveys a short message, which is then explained in more
+    /// detail in subsequent lines.
     pub message: String,
 }
 
+/// A stanza in an [`Answer::Solution`].
 #[derive(Serialize, Debug, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum Action {
+    /// A single [`Install`] stanza in an [`Answer::Solution`].
     Install(Install),
+    /// A single [`Remove`] stanza in an [`Answer::Solution`].
     Remove(Remove),
+    /// A single [`Autoremove`] stanza in an [`Answer::Solution`].
     Autoremove(Autoremove),
 }
 
@@ -70,14 +140,22 @@ impl From<Autoremove> for Action {
     }
 }
 
+/// The [answer] returned from the external solver to APT upon completion of the dependency
+/// resolution process.
+///
+/// [answer]: https://salsa.debian.org/apt-team/apt/-/blob/a8367745/doc/external-dependency-solver-protocol.md#answer
 #[derive(Serialize, Debug, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum Answer {
+    /// A list of stanzas describing the [`Action`]s to be made to the set of installed packages
+    /// to satisfy the user's request.
     Solution(Vec<Action>),
+    /// A single [`Error`] stanza reporting an error during the dependency resolution process.
     Error(Error),
 }
 
 impl Answer {
+    /// Writes this [`Answer`] to the given `writer`. On error, returns an [`AnswerWriteError`].
     pub fn write_to(&self, writer: impl std::io::Write) -> Result<(), AnswerWriteError> {
         rfc822_like::to_writer(writer, self).map_err(Into::into)
     }
@@ -89,6 +167,10 @@ impl From<Error> for Answer {
     }
 }
 
+/// The error returned when [`Answer::write_to`] fails.
+///
+/// Though the implementation details are hidden, the struct implements [`std::error::Error`]
+/// and a human-friendly [`std::fmt::Display`] implementation.
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub struct AnswerWriteError(#[from] rfc822_like::ser::Error);
