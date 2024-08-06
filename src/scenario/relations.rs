@@ -6,12 +6,18 @@ use serde::{Deserialize, Serialize};
 use super::super::util::TryFromStringVisitor;
 use super::Version;
 
+/// Specifies the comparator used to compare two [`Version`]s.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Relation {
+    /// The first version must be strictly earlier than the second (`a < b`).
     Earlier,
+    /// The first version must be earlier than or equal to the second (`a <= b`).
     EarlierEqual,
+    /// The first version must be equal to the second (`a == b`).
     Equal,
+    /// The first version must be later than or equal to the second (`a >= b`).
     LaterEqual,
+    /// The first version must be strictly later than the second (`a > b`).
     Later,
 }
 
@@ -44,9 +50,13 @@ impl Display for Relation {
     }
 }
 
+/// Describes a set of versions of a package.
 #[derive(Debug, Eq, PartialEq)]
 pub struct VersionSet {
+    /// The name of the package.
     pub package: String,
+    /// The constraint fulfilled by the versions in the version set. If [`None`], the version set
+    /// contains _all_ the versions of the given package.
     pub constraint: Option<(Relation, Version)>,
 }
 
@@ -62,10 +72,17 @@ impl Display for VersionSet {
     }
 }
 
+/// The error returned when failing to parse a [`VersionSet`].
 #[derive(Debug)]
 pub enum VersionSetParseError {
+    /// The package name was empty. Contains the trace information for where the error was found.
     EmptyPackageName(String),
+
+    /// There was an error parsing the constraint. Contains the trace information for where
+    /// the error was found.
     BadConstraintSpec(String),
+
+    /// There was an error parsing the [`Version`].
     BadVersion(<Version as TryFrom<&'static str>>::Error),
 }
 
@@ -163,9 +180,12 @@ impl<'de> Deserialize<'de> for VersionSet {
     }
 }
 
+/// Specifies a dependency of a package that can be fulfilled by one or more [`VersionSet`]s.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Dependency {
+    /// The first [`VersionSet`] that can fulfill this [`Dependency`].
     pub first: VersionSet,
+    /// The other [`VersionSet`]s that can fulfill this [`Dependency`].
     pub alternates: Vec<VersionSet>,
 }
 
@@ -181,8 +201,10 @@ impl Display for Dependency {
     }
 }
 
+/// The error returned when failing to parse a [`Dependency`].
 #[derive(Debug)]
 pub enum DependencyParseError {
+    /// There was an error parsing the [`VersionSet`] with the given index.
     Alternate(usize, VersionSetParseError),
 }
 
