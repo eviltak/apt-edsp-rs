@@ -7,6 +7,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::TryFromStringVisitor;
 
+/// The version number of a package.
+///
+/// Implements [`Ord`] based on the comparison rules defined in the [Debian Policy Manual][man].
+///
+/// See [the manual][man] for more information.
+///
+/// [man]: https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
 #[derive(Clone, Debug, Default)]
 pub struct Version {
     epoch: usize,
@@ -16,18 +23,23 @@ pub struct Version {
 }
 
 impl Version {
+    /// The epoch of the version number.
     pub fn epoch(&self) -> usize {
         self.epoch
     }
 
+    /// The main part of the version number. Equivalent to the `upstream_version`.
     pub fn version(&self) -> &str {
         &self.original[self.version.clone()]
     }
 
+    /// The version of the Debian package based on the upstream version. Equivalent to
+    /// the `debian_revision`.
     pub fn revision(&self) -> &str {
         &self.original[self.revision.clone()]
     }
 
+    /// Returns the string representation of this version number.
     pub fn as_str(&self) -> &str {
         &self.original
     }

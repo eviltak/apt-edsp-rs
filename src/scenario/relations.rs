@@ -6,17 +6,23 @@ use serde::{Deserialize, Serialize};
 use super::super::util::TryFromStringVisitor;
 use super::Version;
 
+/// Specifies the comparator used to compare two [`Version`]s.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Relation {
+    /// The first version must be strictly earlier than the second (`a < b`).
     Earlier,
+    /// The first version must be earlier than or equal to the second (`a <= b`).
     EarlierEqual,
+    /// The first version must be equal to the second (`a == b`).
     Equal,
+    /// The first version must be later than or equal to the second (`a >= b`).
     LaterEqual,
+    /// The first version must be strictly later than the second (`a > b`).
     Later,
 }
 
 impl Relation {
-    pub fn parse<'a, E: nom::error::ParseError<&'a str>>(
+    fn parse<'a, E: nom::error::ParseError<&'a str>>(
         input: &'a str,
     ) -> nom::IResult<&str, Self, E> {
         use nom::branch::alt;
@@ -44,13 +50,17 @@ impl Display for Relation {
     }
 }
 
+/// Describes a set of versions of a package.
 #[derive(Debug, Eq, PartialEq)]
-pub struct Relationship {
+pub struct VersionSet {
+    /// The name of the package.
     pub package: String,
+    /// The constraint fulfilled by the versions in the version set. If [`None`], the version set
+    /// contains _all_ the versions of the given package.
     pub constraint: Option<(Relation, Version)>,
 }
 
-impl Display for Relationship {
+impl Display for VersionSet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.package)?;
 
@@ -62,29 +72,36 @@ impl Display for Relationship {
     }
 }
 
+/// The error returned when failing to parse a [`VersionSet`].
 #[derive(Debug)]
-pub enum RelationshipParseError {
+pub enum VersionSetParseError {
+    /// The package name was empty. Contains the trace information for where the error was found.
     EmptyPackageName(String),
+
+    /// There was an error parsing the constraint. Contains the trace information for where
+    /// the error was found.
     BadConstraintSpec(String),
+
+    /// There was an error parsing the [`Version`].
     BadVersion(<Version as TryFrom<&'static str>>::Error),
 }
 
-impl Display for RelationshipParseError {
+impl Display for VersionSetParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RelationshipParseError::EmptyPackageName(e) => {
+            VersionSetParseError::EmptyPackageName(e) => {
                 write!(f, "Error parsing package name:\n{e}")
             }
-            RelationshipParseError::BadConstraintSpec(e) => {
+            VersionSetParseError::BadConstraintSpec(e) => {
                 write!(f, "Error parsing constraint spec:\n{e}")
             }
-            RelationshipParseError::BadVersion(e) => write!(f, "Error parsing version:\n{e}"),
+            VersionSetParseError::BadVersion(e) => write!(f, "Error parsing version:\n{e}"),
         }
     }
 }
 
-impl FromStr for Relationship {
-    type Err = RelationshipParseError;
+impl FromStr for VersionSet {
+    type Err = VersionSetParseError;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         use nom::bytes::complete::*;
@@ -102,7 +119,7 @@ impl FromStr for Relationship {
             space0,
         )(input)
         .finish()
-        .map_err(|e| RelationshipParseError::EmptyPackageName(convert_error(input, e)))?;
+        .map_err(|e| VersionSetParseError::EmptyPackageName(convert_error(input, e)))?;
 
         // Parse constraint
         let constraint = if remaining.is_empty() {
@@ -123,8 +140,8 @@ impl FromStr for Relationship {
                 ),
             ))(remaining)
             .finish()
-            .map_err(|e| RelationshipParseError::BadConstraintSpec(convert_error(input, e)))?;
-            let version = Version::try_from(version).map_err(RelationshipParseError::BadVersion)?;
+            .map_err(|e| VersionSetParseError::BadConstraintSpec(convert_error(input, e)))?;
+            let version = Version::try_from(version).map_err(VersionSetParseError::BadVersion)?;
             Some((relation, version))
         };
 
@@ -135,7 +152,7 @@ impl FromStr for Relationship {
     }
 }
 
-impl TryFrom<String> for Relationship {
+impl TryFrom<String> for VersionSet {
     type Error = <Self as FromStr>::Err;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
@@ -143,7 +160,7 @@ impl TryFrom<String> for Relationship {
     }
 }
 
-impl TryFrom<&str> for Relationship {
+impl TryFrom<&str> for VersionSet {
     type Error = <Self as FromStr>::Err;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -151,22 +168,25 @@ impl TryFrom<&str> for Relationship {
     }
 }
 
-impl Serialize for Relationship {
+impl Serialize for VersionSet {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(self)
     }
 }
 
-impl<'de> Deserialize<'de> for Relationship {
+impl<'de> Deserialize<'de> for VersionSet {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer.deserialize_str(TryFromStringVisitor::new())
     }
 }
 
+/// Specifies a dependency of a package that can be fulfilled by one or more [`VersionSet`]s.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Dependency {
-    pub first: Relationship,
-    pub alternates: Vec<Relationship>,
+    /// The first [`VersionSet`] that can fulfill this [`Dependency`].
+    pub first: VersionSet,
+    /// The other [`VersionSet`]s that can fulfill this [`Dependency`].
+    pub alternates: Vec<VersionSet>,
 }
 
 impl Display for Dependency {
@@ -181,9 +201,11 @@ impl Display for Dependency {
     }
 }
 
+/// The error returned when failing to parse a [`Dependency`].
 #[derive(Debug)]
 pub enum DependencyParseError {
-    Alternate(usize, RelationshipParseError),
+    /// There was an error parsing the [`VersionSet`] with the given index.
+    Alternate(usize, VersionSetParseError),
 }
 
 impl Display for DependencyParseError {
