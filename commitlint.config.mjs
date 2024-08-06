@@ -11,6 +11,7 @@ const Configuration = {
             'fix',
             'perf',
             'refactor',
+            'remove',
             'revert',
             'style',
             'test',
