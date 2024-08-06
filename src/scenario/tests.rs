@@ -56,6 +56,78 @@ serde_test! {
     }
 }
 
+fn foo_1_0_0() -> Package {
+    Package {
+        package: "foo".into(),
+        version: "1.0.0".try_into().unwrap(),
+        architecture: "amd64".into(),
+        id: "0".into(),
+        pin: 500,
+        depends: vec!["bar (>= 0.1.0)".parse().unwrap()],
+        ..Default::default()
+    }
+}
+
+fn bar_0_2_0() -> Package {
+    Package {
+        package: "bar".into(),
+        version: "0.2.0".try_into().unwrap(),
+        architecture: "amd64".into(),
+        installed: Bool::YES,
+        id: "1".into(),
+        pin: 500,
+        conflicts: vec!["foo (<< 1.0.0)".parse().unwrap()],
+        ..Default::default()
+    }
+}
+
+serde_test! {
+    package: {
+        indoc! {"
+            Package: foo
+            Version: 1.0.0
+            Architecture: amd64
+            APT-ID: 0
+            APT-Pin: 500
+            Depends: bar (>= 0.1.0)
+        "} => foo_1_0_0(),
+        indoc! {"
+            Package: bar
+            Version: 0.2.0
+            Architecture: amd64
+            Installed: yes
+            APT-ID: 1
+            APT-Pin: 500
+            Conflicts: foo (<< 1.0.0)
+        "} => bar_0_2_0(),
+    }
+}
+
+serde_test! {
+    vec_package: {
+        indoc! {"
+            Package: foo
+            Version: 1.0.0
+            Architecture: amd64
+            APT-ID: 0
+            APT-Pin: 500
+            Depends: bar (>= 0.1.0)
+
+            Package: bar
+            Version: 0.2.0
+            Architecture: amd64
+            Installed: yes
+            APT-ID: 1
+            APT-Pin: 500
+            Conflicts: foo (<< 1.0.0)
+        "} =>
+        vec![
+            foo_1_0_0(),
+            bar_0_2_0(),
+        ]
+    }
+}
+
 serde_test! {
     relationship(value_to_string, value_from_str): {
         "foo" =>
