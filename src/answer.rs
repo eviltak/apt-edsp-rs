@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::scenario::Version;
+use super::scenario::{Package, Version};
 
 /// A stanza telling APT to install a specific new package, or to upgrade or downgrade a package
 /// to a specific version.
@@ -12,31 +12,31 @@ pub struct Install {
     /// The identifier of the package to install.
     ///
     /// Must reference the identifier of a package in the package universe
-    /// (see [`Package::id`](super::scenario::Package::id)).
+    /// (see [`Package::id`]).
     pub install: String,
 
     /// The name of the package to install.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::package`](super::scenario::Package::package)) of the corresponding
+    /// ([`Package::package`]) of the corresponding
     /// package in the package universe.
     pub package: Option<String>,
 
     /// The version of the package to install.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::version`](super::scenario::Package::version)) of the corresponding
+    /// ([`Package::version`]) of the corresponding
     /// package in the package universe.
     pub version: Option<Version>,
 
     /// The architecture of the package to install.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::architecture`](super::scenario::Package::architecture)) of the corresponding
+    /// ([`Package::architecture`]) of the corresponding
     /// package in the package universe.
     pub architecture: Option<String>,
 
-    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
+    /// Extra optional fields supported by [`Package`] stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
@@ -48,31 +48,31 @@ pub struct Remove {
     /// The identifier of the package to remove.
     ///
     /// Must reference the identifier of a package in the package universe
-    /// (see [`Package::id`](super::scenario::Package::id)).
+    /// (see [`Package::id`]).
     pub remove: String,
 
     /// The name of the package to remove.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::package`](super::scenario::Package::package)) of the corresponding
+    /// ([`Package::package`]) of the corresponding
     /// package in the package universe.
     pub package: Option<String>,
 
     /// The version of the package to remove.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::version`](super::scenario::Package::version)) of the corresponding
+    /// ([`Package::version`]) of the corresponding
     /// package in the package universe.
     pub version: Option<Version>,
 
     /// The architecture of the package to remove.
     ///
     /// While optional, it is highly recommend to set this field to the value of the field
-    /// ([`Package::architecture`](super::scenario::Package::architecture)) of the corresponding
+    /// ([`Package::architecture`]) of the corresponding
     /// package in the package universe.
     pub architecture: Option<String>,
 
-    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
+    /// Extra optional fields supported by [`Package`] stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
 }
@@ -85,12 +85,45 @@ pub struct Autoremove {
     /// The identifier of the package that can be autoremoved.
     ///
     /// Must reference the identifier of a package in the package universe
-    /// (see [`Package::id`](super::scenario::Package::id)).
+    /// (see [`Package::id`]).
     pub autoremove: String,
 
-    /// Extra optional fields supported by [`Package`](super::scenario::Package) stanzas.
+    /// Extra optional fields supported by [`Package`] stanzas.
     #[serde(flatten)]
     pub extra: HashMap<String, String>,
+}
+
+impl Package {
+    /// Returns an [`Install`] stanza that can be used to tell APT to install this package.
+    pub fn to_install(&self) -> Install {
+        Install {
+            install: self.id.clone(),
+            package: Some(self.package.clone()),
+            version: Some(self.version.clone()),
+            architecture: Some(self.architecture.clone()),
+            ..Default::default()
+        }
+    }
+
+    /// Returns a [`Remove`] stanza that can be used to tell APT to remove this package.
+    pub fn to_remove(&self) -> Remove {
+        Remove {
+            remove: self.id.clone(),
+            package: Some(self.package.clone()),
+            version: Some(self.version.clone()),
+            architecture: Some(self.architecture.clone()),
+            ..Default::default()
+        }
+    }
+
+    /// Returns an [`Autoremove`] stanza that can be used to tell APT that this package can be
+    /// autoremoved.
+    pub fn to_autoremove(&self) -> Autoremove {
+        Autoremove {
+            autoremove: self.id.clone(),
+            ..Default::default()
+        }
+    }
 }
 
 /// An [Error stanza][error] reporting the error(s) faced when trying to fulfill an
