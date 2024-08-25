@@ -84,13 +84,24 @@ impl FromStr for ArchQualifiedPackageName {
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct Actions {
-    /// (deprecated) Set to [`Bool::YES`] in an APT `dist-upgrade` request. Defaults to
-    /// [`Bool::NO`].
-    ///
-    /// Equivalent to setting [`Actions::upgrade_all`] to [`Bool::YES`], and
-    /// [`Preferences::forbid_new_install`] and [`Preferences::forbid_remove`] to [`Bool::NO`].
-    #[serde(rename = "Dist-Upgrade")]
-    pub dist_upgrade: Bool,
+    /// A space-separated list of arch-qualified package names, with no version attached, to
+    /// install.
+    #[serde(default, with = "super::util::serde_space_separated_as_string")]
+    pub install: Vec<ArchQualifiedPackageName>,
+
+    /// A space-separated list of arch-qualified package names, with no version attached, to
+    /// remove.
+    #[serde(default, with = "super::util::serde_space_separated_as_string")]
+    pub remove: Vec<ArchQualifiedPackageName>,
+
+    /// If set to [`Bool::YES`], an upgrade of all installed packages has been requested,
+    /// usually via an upgrade command like `apt full-upgrade`. Defaults to [`Bool::NO`].
+    #[serde(rename = "Upgrade-All")]
+    pub upgrade_all: Bool,
+
+    /// If set to [`Bool::YES`], a cleanup of unused automatically installed packages has been
+    /// requested, usually via an APT `autoremove` request. Defaults to [`Bool::NO`].
+    pub autoremove: Bool,
 
     /// (deprecated) Set to [`Bool::YES`] in an APT `upgrade` request. Defaults to [`Bool::NO`].
     ///
@@ -98,24 +109,13 @@ pub struct Actions {
     /// [`Preferences::forbid_remove`] to [`Bool::YES`].
     pub upgrade: Bool,
 
-    /// If set to [`Bool::YES`], a cleanup of unused automatically installed packages has been
-    /// requested, usually via an APT `autoremove` request. Defaults to [`Bool::NO`].
-    pub autoremove: Bool,
-
-    /// If set to [`Bool::YES`], an upgrade of all installed packages has been requested,
-    /// usually via an upgrade command like `apt full-upgrade`. Defaults to [`Bool::NO`].
-    #[serde(rename = "Upgrade-All")]
-    pub upgrade_all: Bool,
-
-    /// A space-separated list of arch-qualified package names, with no version attached, to
-    /// remove.
-    #[serde(default, with = "super::util::serde_space_separated_as_string")]
-    pub remove: Vec<ArchQualifiedPackageName>,
-
-    /// A space-separated list of arch-qualified package names, with no version attached, to
-    /// install.
-    #[serde(default, with = "super::util::serde_space_separated_as_string")]
-    pub install: Vec<ArchQualifiedPackageName>,
+    /// (deprecated) Set to [`Bool::YES`] in an APT `dist-upgrade` request. Defaults to
+    /// [`Bool::NO`].
+    ///
+    /// Equivalent to setting [`Actions::upgrade_all`] to [`Bool::YES`], and
+    /// [`Preferences::forbid_new_install`] and [`Preferences::forbid_remove`] to [`Bool::NO`].
+    #[serde(rename = "Dist-Upgrade")]
+    pub dist_upgrade: Bool,
 }
 
 /// Encapsulates the _preference_ fields in a [`Request`] stanza.

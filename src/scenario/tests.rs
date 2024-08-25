@@ -32,8 +32,8 @@ serde_test! {
 
             Request: EDSP 0.5
             Architecture: amd64
-            Remove: python3:all python:amd64
             Install: libc:amd64 rustc:i386
+            Remove: python3:all python:amd64
         "} =>
         vec![
             Request {
