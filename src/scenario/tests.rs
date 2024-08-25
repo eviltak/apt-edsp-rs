@@ -32,6 +32,8 @@ serde_test! {
 
             Request: EDSP 0.5
             Architecture: amd64
+            Install: libc:amd64 rustc:i386
+            Remove: python3:all python:amd64
         "} =>
         vec![
             Request {
@@ -48,6 +50,26 @@ serde_test! {
                 architecture: "amd64".into(),
                 actions: Actions {
                     upgrade_all: Bool::NO,
+                    install: vec![
+                        ArchQualifiedPackageName {
+                            name: "libc".into(),
+                            architecture: "amd64".into(),
+                        },
+                        ArchQualifiedPackageName {
+                            name: "rustc".into(),
+                            architecture: "i386".into(),
+                        },
+                    ],
+                    remove: vec![
+                        ArchQualifiedPackageName {
+                            name: "python3".into(),
+                            architecture: "all".into(),
+                        },
+                        ArchQualifiedPackageName {
+                            name: "python".into(),
+                            architecture: "amd64".into(),
+                        },
+                    ],
                     ..Default::default()
                 },
                 ..Default::default()
