@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::BufRead;
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +45,41 @@ impl Scenario {
 #[error(transparent)]
 pub struct ScenarioReadError(#[from] rfc822_like::de::Error);
 
+/// An architecture-qualified package name used in [`Actions`] fields.
+#[derive(Debug, Eq, PartialEq)]
+pub struct ArchQualifiedPackageName {
+    /// The name of the requested package.
+    pub name: String,
+    /// The architecture of the requested package.
+    pub architecture: String,
+}
+
+impl std::fmt::Display for ArchQualifiedPackageName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.name, self.architecture)
+    }
+}
+
+/// The error returned when [`ArchQualifiedPackageName::from_str`] fails.
+#[derive(Debug, thiserror::Error)]
+#[error("Missing colon in arch-qualified package name")]
+pub struct ArchQualifiedPackageNameParseError;
+
+impl FromStr for ArchQualifiedPackageName {
+    type Err = ArchQualifiedPackageNameParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (name, architecture) = s
+            .split_once(':')
+            .ok_or(ArchQualifiedPackageNameParseError)?;
+
+        Ok(ArchQualifiedPackageName {
+            name: name.into(),
+            architecture: architecture.into(),
+        })
+    }
+}
+
 /// Encapsulates the _action_ fields in a [`Request`] stanza.
 #[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
 #[serde(rename_all = "PascalCase")]
@@ -72,12 +108,14 @@ pub struct Actions {
     pub upgrade_all: Bool,
 
     /// A space-separated list of arch-qualified package names, with no version attached, to
-    /// remove. A value of [`None`] denotes an empty list.
-    pub remove: Option<String>,
+    /// remove.
+    #[serde(default, with = "super::util::serde_space_separated_as_string")]
+    pub remove: Vec<ArchQualifiedPackageName>,
 
     /// A space-separated list of arch-qualified package names, with no version attached, to
-    /// install. A value of [`None`] denotes an empty list.
-    pub install: Option<String>,
+    /// install.
+    #[serde(default, with = "super::util::serde_space_separated_as_string")]
+    pub install: Vec<ArchQualifiedPackageName>,
 }
 
 /// Encapsulates the _preference_ fields in a [`Request`] stanza.
