@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/eviltak/apt-edsp-rs/compare/v0.4.1...v0.5.0) - 2024-08-25
+
+### Features
+- *(scenario)* [**breaking**] Reorder fields in `Actions`
+- *(scenario)* [**breaking**] Support space-separated arch-qualified package names
+
 ## [0.4.1](https://github.com/eviltak/apt-edsp-rs/compare/v0.4.0...v0.4.1) - 2024-08-13
 
 ### Features
